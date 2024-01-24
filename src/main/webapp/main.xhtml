@@ -1,0 +1,154 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui">
+<h:head>
+    <title>Main Page</title>
+    <h:outputStylesheet library="css" name="styles.css"/>
+
+</h:head>
+<h:body>
+    <div class="container">
+        <div class="header">
+            <h1>Таранов Кирилл Викторович, группа P3219, вариант 2939</h1>
+        </div>
+
+        <div class="graph">
+            <canvas id="graphic" width="420px" height="420px"/>
+        </div>
+
+        <h:form styleClass="form" id="form">
+            <div class="x-text" style="margin-bottom: 15px">
+                <h:outputLabel styleClass="x-label" for="x">Выберите X: </h:outputLabel> <br/>
+                <h:inputText id="x" value="#{point.x}" maxlength="12"
+                             validatorMessage="Введите корректное числовое значение X в диапазоне (-3;3)." converterMessage="Введите корректное числовое значение X в диапазоне (-3;3)." styleClass="x">
+                    <f:validateDoubleRange minimum="-2.99999999999999" maximum="2.99999999999999" />
+                    <f:validateRequired/>
+                    <f:ajax event="keyup" render="x-warning" execute="x" />
+                    <f:ajax render="hiddenY" />
+                </h:inputText>
+                <p><h:message id="x-warning" styleClass="warning" for="x"/></p>
+            </div>
+
+            <div class="y-select">
+                <h:outputLabel styleClass="y-label" for="y">Выберите Y: </h:outputLabel>
+                <h:selectOneRadio id="y" value="#{point.y}" layout="pageDirection">
+                    <h:inputHidden id="hiddenY" value="#{point.hiddenY}" />
+                <f:selectItem itemValue="-5" itemLabel="-5"/>
+                    <f:selectItem itemValue="-4" itemLabel="-4"/>
+                    <f:selectItem itemValue="-3" itemLabel="-3"/>
+                    <f:selectItem itemValue="-2" itemLabel="-2"/>
+                    <f:selectItem itemValue="-1" itemLabel="-1"/>
+                    <f:selectItem itemValue="0" itemLabel="0"/>
+                    <f:selectItem itemValue="1" itemLabel="1"/>
+                    <f:selectItem itemValue="2" itemLabel="2"/>
+                    <f:selectItem itemValue="3" itemLabel="3"/>
+                    <f:ajax render="hiddenY" />
+                    <f:validateRequired/>
+                </h:selectOneRadio>
+            </div>
+
+
+
+            <div class="r-select">
+                <h:outputLabel styleClass="r-label" for="r">Выберите R:  </h:outputLabel>
+                <p:inputText type='hidden' value="#{point.r}" name='r' id='r'/>
+                <!-- Добавленное поле для отображения текущего выбранного значения R -->
+                <div class="r-display">
+                    <h:outputLabel styleClass="r-display-label" for="r-display">Текущее значение R: </h:outputLabel>
+                    <h:outputText id="r-display" styleClass="r-display-value" value="#{point.getR() == 0 ? 2.0 : point.getR()}"/>
+                </div>
+                <div id="r-buttons">
+                    <h:commandButton value="1" styleClass="r-button" id="rbutton1" action="#{point.setR(1)}">
+                        <f:ajax render="@form" onevent="changeR(1)"/>
+                    </h:commandButton>
+                    <h:commandButton value="1.5" styleClass="r-button" id="rbutton2" action="#{point.setR(1.5)}">
+                        <f:ajax render="@form" onevent="changeR(1.5)"/>
+                    </h:commandButton>
+                    <h:commandButton value="2" styleClass="r-button" id="rbutton3" action="#{point.setR(2)}">
+                        <f:ajax render="@form" onevent="changeR(2)" />
+                    </h:commandButton>
+                    <h:commandButton value="2.5" styleClass="r-button" id="rbutton4" action="#{point.setR(2.5)}">
+                        <f:ajax render="@form" onevent="changeR(2.5)"/>
+                    </h:commandButton>
+                    <h:commandButton value="3" styleClass="r-button" id="rbutton5" action="#{point.setR(3)}">
+                        <f:ajax render="@form" onevent="changeR(3)"/>
+                    </h:commandButton>
+                </div>
+
+                <p><h:message id="r-warning" styleClass="warning" for="r"/></p>
+            </div>
+
+
+            <div class="button-wrap" id="submit-wrap">
+                <h:commandButton id="submit-button" value="Отправить" action="#{point.check}" styleClass="button" >
+                    <f:ajax execute="@form" render="hiddenY results-table" onevent="addDot()"/>
+
+                </h:commandButton>
+            </div>
+
+            <div class="button-wrap" id="clear-wrap">
+                <h:commandButton id="clear-button" value="Очистить таблицу" action="#{table.clear}" styleClass="clear-button">
+                    <f:ajax render="results-table" onevent="clearDots(); change(2)"/>
+                </h:commandButton>
+            </div>
+
+            <p:remoteCommand name="setTimezone" action="#{timezoner.setTimezone}"/>
+            <p:remoteCommand name="addPoint" action="#{table.addPoint}"/>
+        </h:form>
+
+        <div class="results-holder">
+            <h:dataTable value="#{table.getResults()}" var="row" styleClass="results" headerClass="res-header"
+                         rowClasses="res-row" id="results-table">
+                <h:column>
+                    <f:facet name="header">X</f:facet>
+                    <h:outputText value="#{row.x}"/>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Y</f:facet>
+                    <h:outputText value="#{row.hiddenY}"/>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">R</f:facet>
+                    <h:outputText value="#{row.r}"/>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Результат</f:facet>
+                    <h:outputText value="Попадание" style="color: green;" rendered="#{row.hit}"/>
+                    <h:outputText value="Промах" style="color: red;" rendered="#{!row.hit}"/>
+                </h:column>
+                <h:column>
+                <f:facet name="header">Время попытки</f:facet>
+                    <h:outputText value="#{row.attemptTime}">
+                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="#{timezoner.timezone}"/>
+                    </h:outputText>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Время выполнения</f:facet>
+                    <h:outputText value="#{row.executionTime}"/>
+                </h:column>
+            </h:dataTable>
+        </div>
+
+        <h:link outcome="goToIndex" styleClass="h-link">
+            Начальная страница
+        </h:link>
+    </div>
+
+    <h:outputScript library="js" name="plot.js"/>
+    <h:outputScript library="js" name="rbuttons-handler.js"/>
+    <script type="text/javascript">
+            provideInteractiveGraphics();
+            setTimezone([{name: "timezone", value: Intl.DateTimeFormat().resolvedOptions().timeZone}]);
+            let x = JSON.parse('#{table.x}');
+            let y = JSON.parse('#{table.y}');
+            let r = JSON.parse('#{table.r}');
+            let hit = JSON.parse('#{table.hit}');
+            saveDots(x, y, r, hit)
+            changeR(2);
+    </script>
+
+</h:body>
+</html>
